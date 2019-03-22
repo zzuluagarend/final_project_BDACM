@@ -1,6 +1,6 @@
 library(pacman)
-p_load(tidyverse, foreign, psych, lsr, lme4, brms, sjPlot,
-       stringr, htmlwidgets, ggplot2, lsmeans, HDInterval)
+p_load(tidyverse, psych, lsr, lme4, brms, sjPlot,
+       stringr, ggplot2, lsmeans, HDInterval)
 
 rm(list = ls())
 
@@ -81,7 +81,8 @@ ioed <- ioed %>%
 
 ioed <- ioed %>%
 # ioed1 <- ioed %>%
-  dplyr::mutate(itempre_HD = NA,
+  dplyr::mutate(submission_id = as.factor(submission_id),
+                itempre_HD = NA,
                 pre_high = NA,
                 itempre_LD = NA,
                 pre_low = NA)
@@ -147,8 +148,15 @@ ioed2 <- ioed %>% slice(1:(nrow(ioed)/4),
                         (((nrow(ioed)/4)*3)+1):(nrow(ioed)))
                           
 
-model1 <- glm(data=ioed2, formula=magnitude~rt+desirability+rt*desirability)
+model1 <- glm(data=ioed2, 
+              formula=magnitude~rt + desirability + rt*desirability)
+
+model2 <- glm(data=ioed2, 
+              formula=magnitude~rt + desirability + rt*desirability +
+                (1 | submission_id))
+
 summary(model1)
+summary(model2)
 
 int_plot <- plot_model(model1, type = "pred", terms = c("rt", "desirability"))
 int_plot
