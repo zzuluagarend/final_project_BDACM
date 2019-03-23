@@ -90,7 +90,7 @@ ioed <- ioed %>%
 
 for (i in 1:nrow(ioed)) {
   for (j in c(2,6)) {
-    if (ioed[i,j] == ioed[i,10]) {
+    if (ioed[i,j] != ioed[i,10]) {
       ioed[i,j] = NA
       ioed[i,j+1] = NA
     }
@@ -125,38 +125,53 @@ for (i in 1:nrow(ioed)) {
   }
 }
 
+ioed1 <- ioed
+# ioed <- ioed1
+
 ioed <- ioed %>% 
-  dplyr::select(submission_id, itempre_HD:pre_low,
-                -(item_HD1:pre_rateLD2), item_HD:pre_low)
+  dplyr::select(submission_id, item_HD:timeSpent, pre_high, pre_low)
 
 
 ioed <- ioed %>% 
   mutate(ioed_high = pre_high-post_high,
          ioed_low = pre_low-post_low)
 
-# ioed1 <- ioed
-ioed <- ioed1
-
 ioed <- ioed %>% 
-  tidyr::gather(ioed_high, ioed_low,
-                key='desirability', value = 'magnitude') %>%
+  gather(ioed_high, ioed_low,
+         key='desirability', value = 'magnitude') %>%
   mutate(desirability = as.factor(desirability)) %>%  
-  gather(RT1, RT2, key = 'order', value = 'rt') 
+  gather(RT1, RT2, key = 'order', value = 'rt')
   # distinct(rt, .keep_all = TRUE)
 
-ioed2 <- ioed %>% slice(1:(nrow(ioed)/4),
-                        (((nrow(ioed)/4)*3)+1):(nrow(ioed)))
-                          
+ioed <- ioed %>%
+  slice(1:(nrow(ioed)/4), (((nrow(ioed)/4)*3)+1):(nrow(ioed))) %>% 
+  mutate(item_HD = as.character(item_HD),
+         item_LD = as.character(item_LD))
 
+ioed2 <- ioed %>% 
+  gather(item_HD, item_LD, key = "condition", value = "item") %>% 
+  mutate(item = as.factor(item))
+
+ioed2 <- ioed2 %>% 
+  slice(1:(nrow(ioed2)/4), (((nrow(ioed2)/4)*3)+1):(nrow(ioed2))) %>% 
+  mutate(item = as.factor(item))
+  
+  
 model1 <- glm(data=ioed2, 
               formula=magnitude~rt + desirability + rt*desirability)
 
 model2 <- glm(data=ioed2, 
               formula=magnitude~rt + desirability + rt*desirability +
-                (1 | submission_id))
+                (1 + item))
 
 summary(model1)
 summary(model2)
+
+model_bay <- brm(data=ioed2, 
+                 formula=magnitude~rt + desirability + rt*desirability)
+
+summary(model_bay)
+
 
 int_plot <- plot_model(model1, type = "pred", terms = c("rt", "desirability"))
 int_plot
