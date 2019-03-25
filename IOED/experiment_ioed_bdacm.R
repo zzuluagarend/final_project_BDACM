@@ -1,6 +1,6 @@
 library(pacman)
 p_load(tidyverse, psych, lsr, lme4, brms, sjPlot,
-       stringr, ggplot2, lsmeans, HDInterval)
+       stringr, ggplot2, lsmeans, HDInterval, stringr)
 
 rm(list = ls())
 
@@ -125,12 +125,10 @@ for (i in 1:nrow(ioed)) {
   }
 }
 
-ioed1 <- ioed
-# ioed <- ioed1
-
 ioed <- ioed %>% 
   dplyr::select(submission_id, item_HD:timeSpent, pre_high, pre_low)
 
+ioed1 <- ioed
 
 ioed <- ioed %>% 
   mutate(ioed_high = pre_high-post_high,
@@ -156,7 +154,27 @@ ioed2 <- ioed2 %>%
   slice(1:(nrow(ioed2)/4), (((nrow(ioed2)/4)*3)+1):(nrow(ioed2))) %>% 
   mutate(item = as.factor(item))
   
-  
+ioed3 <- ioed1 %>% 
+  gather(pre_high, post_high, key = "high", value = "score_high") %>% 
+  gather(pre_low, post_low, key = "low", value = "score_low") %>%  
+  filter(substring(high, 1, 3) == substring(low, 1, 3))
+
+ioed4 <- ioed1 %>% 
+  gather(pre_high, pre_low, key = "pre", value = "score_pre") %>% 
+  gather(post_high, post_low, key = "post", value = "score_post")
+
+ioed4 <- ioed4 %>%  
+  filter(str_match(ioed4$pre, ".*[:punct:](.*)")[,2] == 
+           str_match(ioed4$post, ".*[:punct:](.*)")[,2]) %>% 
+  gather(score_pre, score_post, key = "time", value = "value") %>% 
+  mutate(time = as.factor(time),
+         illusion = as.factor(c(replicate(26, "high"), replicate(26, "low"),
+                      replicate(26, "high"), replicate(26, "low"))))
+
+model_ilu <- glm(formula = value ~ time, data = ioed4)  
+summary(model_ilu)
+plot_model(model_ilu, type = "eff")
+
 model1 <- glm(data=ioed2, 
               formula=magnitude~rt + desirability + rt*desirability)
 
@@ -168,7 +186,9 @@ summary(model1)
 summary(model2)
 
 model_bay <- brm(data=ioed2, 
-                 formula=magnitude~rt + desirability + rt*desirability)
+                 formula=magnitude~rt + desirability + rt*desirability +
+                   (1 + item),
+                 iter = 5000)
 
 summary(model_bay)
 
