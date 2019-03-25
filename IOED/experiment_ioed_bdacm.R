@@ -171,9 +171,9 @@ ioed4 <- ioed4 %>%
          illusion = as.factor(c(replicate(26, "high"), replicate(26, "low"),
                       replicate(26, "high"), replicate(26, "low"))))
 
-model_ilu <- glm(formula = value ~ time, data = ioed4)  
+model_ilu <- glm(formula = value ~ time*illusion, data = ioed4)  
 summary(model_ilu)
-plot_model(model_ilu, type = "eff")
+plot_model(model_ilu, type = "int")
 
 model1 <- glm(data=ioed2, 
               formula=magnitude~rt + desirability + rt*desirability)
