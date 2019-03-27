@@ -33,7 +33,8 @@ for (i in 1:nrow(ioed)) {
   for (j in seq(2, 24, by = 2)) {
     if (ioed[i,j] == "How Healthcare system in your country works") {
       pre_rateHD1[i] = ioed[i,j+1]
-      ioed<- ioed %>% mutate(item_HD1 = "How Healthcare system in your country works")
+      ioed<- ioed %>% mutate(item_HD1 = 
+                               "How Healthcare system in your country works")
     }
   }
 }
@@ -168,12 +169,15 @@ ioed4 <- ioed4 %>%
            str_match(ioed4$post, ".*[:punct:](.*)")[,2]) %>% 
   gather(score_pre, score_post, key = "time", value = "value") %>% 
   mutate(time = as.factor(time),
-         illusion = as.factor(c(replicate(26, "high"), replicate(26, "low"),
-                      replicate(26, "high"), replicate(26, "low"))))
+         illusion = as.factor(c(replicate(nrow(ioed4)/4, "high"), 
+                                replicate(nrow(ioed4)/4, "low"), 
+                                replicate(nrow(ioed4)/4, "high"), 
+                                replicate(nrow(ioed4)/4, "low"))))
 
 model_ilu <- glm(formula = value ~ time*illusion, data = ioed4)  
 summary(model_ilu)
 plot_model(model_ilu, type = "int")
+plot_model(model_ilu, type = "eff")
 
 model1 <- glm(data=ioed2, 
               formula=magnitude~rt + desirability + rt*desirability)
@@ -188,7 +192,7 @@ summary(model2)
 model_bay <- brm(data=ioed2, 
                  formula=magnitude~rt + desirability + rt*desirability +
                    (1 + item),
-                 iter = 5000)
+                 iter = 10000)
 
 summary(model_bay)
 
