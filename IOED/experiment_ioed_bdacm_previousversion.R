@@ -196,15 +196,15 @@ plot_model(model_ilu, type = "eff")
 model1 <- glm(data=ioed2, 
               formula=magnitude~rt + desirability + rt*desirability)
 
+model2 <- glm(data=ioed2, 
+              formula=magnitude~rt + desirability + rt*desirability +
+                (1 + item))
+
 summary(model1)
-int_plot <- plot_model(model1, type = "pred", terms = c("rt", "desirability"))
-int_plot
-plot_model(model1, type = "int")
-plot_model(model1, type = "eff")
+summary(model2)
 
-plot_model(model1, type = "pred", terms = c("desirability", "rt"))
-
-## bayes lm
+plot_model(model2, type = "int")
+plot_model(model2, type = "eff")
 
 BF_model1 <- BayesFactor::lmBF(data=as.data.frame(ioed2), 
                                formula=magnitude~rt + desirability)
@@ -212,15 +212,13 @@ BF_model1 <- BayesFactor::lmBF(data=as.data.frame(ioed2),
 post_samples_mod1 <- BayesFactor::posterior(model = BF_model1, iterations = 5000)
 
 get_prior(data=ioed2, 
-          formula=magnitude~rt + desirability + rt*desirability)
+          formula=magnitude~rt + desirability + rt*desirability +
+            (1 + item))
 
 priors <- c(set_prior("normal(0, .10)", class = "b", 
                        coef = "desirabilityioed_low"),
             set_prior("normal(0.6, .10)", class = "Intercept"),
             set_prior("uniform(0,1500000)", class = "b", coef = "rt"))
-
-model_bay_null <- brm(data=ioed2, 
-                      formula=magnitude~1)
 
 model_bay <- brm(data=ioed2, 
                  formula=magnitude~rt + desirability + rt*desirability +
@@ -233,6 +231,12 @@ posterior_samples(model_bay)
 
 summary(model_bay)
 
+int_plot <- plot_model(model1, type = "pred", terms = c("rt", "desirability"))
+int_plot
+plot_model(model1, type = "int")
+plot_model(model1, type = "eff")
+
+plot_model(model1, type = "pred", terms = c("desirability", "rt"))
 
 #RESULTS
 #The results don't show any significant raw effect of illusion of explanatory depth
